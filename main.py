@@ -1,87 +1,109 @@
 __author__ = "Ji-Hwan Moon"
 
 import argparse
-import torch
-import datetime
+from utils.data_provider_for_GPT import DataProvider as DP
 
-from torch.utils.data import DataLoader
-from utils import data_provider, make_vocab
-from transformers import BertForNextSentencePrediction, Trainer, TrainingArguments, BertConfig, AdamW
+from transformers import RobertaTokenizerFast
+from transformers import pipeline
+from transformers import RobertaForMaskedLM
 
 
-# set argument parser
-parser = argparse.ArgumentParser(description="For medical information analysis")
+class MedicalAnalysis:
+    def __init__(self):
+        self.args = self.get_args()
 
-parser.add_argument('--data_path', required=False, default='data.csv')
-parser.add_argument('--vocab_path', required=False, default='utils/vocab.txt')
-parser.add_argument('--last_name', required=False, default=-1)
+        self.tokenizer = self.get_tokenizer()
+        self.model = RobertaForMaskedLM.from_pretrained(self.args.model_path)
+        self.fill_mask = pipeline("fill-mask",
+                                  model=self.args.model_path,
+                                  tokenizer=self.tokenizer)
 
-args = parser.parse_args()
+        self.last_attentions = []
 
-# set vocabulary file and tokenizer
-make_vocab.make_vocab(args.vocab_path)
+    def make_string(self, L):
+        ret = ""
+        L = L[:-7]
 
-# get data from csv file and set cuda or cpu
-dp = data_provider.DataProvider(args.data_path, args.vocab_path)
-device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        for l in L:
+            ret = ret + l + " "
 
-# initialize model
-config = BertConfig(vocab_size=3305, architectures=["BertForMaskedLM"])
-model = BertForNextSentencePrediction(config=config)
-model.to(device)
-model.train()
+        return ret
 
-train_loader = DataLoader(dp.train_dataset, batch_size=8, shuffle=True)
-optim = AdamW(model.parameters(), lr=5e-5)
-name = args.last_name
+    def get_tokenizer(self):
+        # load tokenizer from pretrained tokenizer
+        tokenizer = RobertaTokenizerFast.from_pretrained(self.args.tokenizer_path, max_len=512)
 
-for epoch in range(100):
-    losses = 0
-    count = 0
-    name += 1
+        return tokenizer
 
-    for batch in train_loader:
-        optim.zero_grad()
+    def start(self):
+        with open("csv_string.txt") as cs:
+            L = cs.readlines()
+            PD = []
+            PB = []
 
-        input_ids = batch['input_ids'].to(device)
-        attention_mask = batch['attention_mask'].to(device)
-        labels = batch['labels'].to(device)
+            count = 0
+            for l in L:
+                l2 = list(l.split())
+                s = self.make_string(l2)
 
-        outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
-        loss = outputs[0]
-        losses += loss
-        count += 1
+                prediction, probability = self.get_answer(s)
+                PD.append(prediction)
+                PB.append(probability)
+                count += 1
 
-        loss.backward()
-        optim.step()
+            return PD, PB, count
 
-    losses /= count
-    print(f"{epoch} loss : {losses}")
+    def get_answer(self, s):
+        probability = []
+        for _ in range(7):
+            s += "<mask>"
+            s_model = self.tokenizer(s, return_tensors="pt")
 
-    save_path = "./results/models/" + str(name) + ".pt"
-    torch.save(model.state_dict(), save_path)
+            self.last_attentions = self.model(**s_model, output_attentions=True)
+            self.last_attentions = self.last_attentions[-1]
 
-    with open("results/loss.txt", 'a+') as f:
-        f.write(str(name) + " loss : " + str(losses.item()))
+            output_pipe = self.fill_mask(s)
 
-model.eval()
+            s = output_pipe[0]["sequence"]
+            probability.append(output_pipe[0]["score"])
 
-# initialize Trainer
-# training_args = TrainingArguments(
-#     output_dir='./results',          # output directory
-#     num_train_epochs=100,            # total # of training epochs
-#     per_device_train_batch_size=8,   # batch size per device during training
-#     per_device_eval_batch_size=8,    # batch size for evaluation
-#     warmup_steps=500,                # number of warmup steps for learning rate scheduler
-#     weight_decay=0.01,               # strength of weight decay
-#     logging_dir='./logs',            # directory for storing logs
-# )
-#
-# trainer = Trainer(
-#     model=model,                         # the instantiated 🤗 Transformers model to be trained
-#     args=training_args,                  # training arguments, defined above
-#     train_dataset=dp.train_dataset,      # training dataset
-#     eval_dataset=dp.test_dataset,        # evaluation dataset
-# )
-#
-# trainer.train()
+        average_pro = sum(probability) / len(probability)
+        return s, average_pro
+
+    def get_args(self):
+        parser = argparse.ArgumentParser(description="For medical information analysis")
+
+        parser.add_argument('--data_path', required=False, default='data.csv')
+        parser.add_argument('--tokenizer_path', required=False, default='model/tokenizer_model/')
+        parser.add_argument('--model_path', default='model/transformer_model/')
+        parser.add_argument('--is_train_model', required=False, default=False)
+        parser.add_argument('--is_train_tokenizer', default=False)
+        parser.add_argument('--csv_string_path', default="csv_string.txt")
+
+        args = parser.parse_args()
+
+        return args
+
+
+if __name__ == "__main__":
+    m = MedicalAnalysis()
+    dp = DP("./data.csv")
+
+    PD, PB, count = m.start()
+
+    param = dp.param.to_numpy()[-7:]
+
+    denorm = dp.denormalize(PD)
+
+    for i in range(len(PD)):
+        print(f"{i} test result \nprediction : {PB[i]}")
+
+        for j in range(7):
+            print(f"{param[j]} : {denorm[i][j][0]} ~ {denorm[i][j][1]}")
+
+        print()
+
+
+
+    # start 하고 나온 결과들 비교 하는 거랑
+    # denormalize 써서 값들 사이의 결과로 바꾸기
