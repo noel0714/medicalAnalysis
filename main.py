@@ -1,6 +1,8 @@
 __author__ = "Ji-Hwan Moon"
 
 import argparse
+
+import utils.utils as util
 from utils.data_provider_for_GPT import DataProvider as DP
 
 from transformers import RobertaTokenizerFast
@@ -86,8 +88,9 @@ class MedicalAnalysis:
 
 
 if __name__ == "__main__":
+    dp = DP("utils/train.csv")
+    util.make_train_txt("utils/test.csv", "model/test.txt")
     m = MedicalAnalysis()
-    dp = DP("./data.csv")
 
     PD, PB, count = m.start()
 
@@ -102,8 +105,3 @@ if __name__ == "__main__":
             print(f"{param[j]} : {denorm[i][j][0]} ~ {denorm[i][j][1]}")
 
         print()
-
-
-
-    # start 하고 나온 결과들 비교 하는 거랑
-    # denormalize 써서 값들 사이의 결과로 바꾸기

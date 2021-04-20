@@ -8,17 +8,26 @@ class DataProvider:
         self.csv = pd.read_csv(self.path, encoding="cp949")
         self.minmax = []
 
+        self.get_minmax()
         self.normalize()
 
         self.param = self.csv.keys()
         self.data = self.csv.to_numpy().astype(np.int32).astype(str)
 
+    def get_minmax(self):
+        path = "utils/max_value.txt"
+
+        with open(path) as t:
+            l = t.readline()
+            self.minmax = list(map(float, l.split()))
+            self.minmax = list(map(int, self.minmax))
+
     def normalize(self):
         count = 0
 
         for col_name, item in self.csv.iteritems():
-            item_min = min(item)
-            item_max = max(item)
+            item_min = 0
+            item_max = self.minmax[count]
 
             if item_min != item_max:
                 item = round((item - item_min) / item_max * 9)
@@ -27,7 +36,6 @@ class DataProvider:
             count += 1
 
             self.csv[col_name] = item
-            self.minmax.append([item_min, item_max])
 
     def denormalize(self, prediction):
         ret = []
@@ -51,6 +59,5 @@ class DataProvider:
 
 if __name__ == "__main__":
     data_path = '../data.csv'
-    vocab_path = 'vocab.txt'
     dp = DataProvider(data_path)
 
