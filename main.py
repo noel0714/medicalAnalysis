@@ -3,6 +3,7 @@ __author__ = "Ji-Hwan Moon"
 import argparse
 
 import utils.utils as util
+import model.train as train
 from utils.data_provider_for_GPT import DataProvider as DP
 
 from transformers import RobertaTokenizerFast
@@ -87,21 +88,26 @@ class MedicalAnalysis:
         return args
 
 
-if __name__ == "__main__":
-    dp = DP("utils/train.csv")
-    util.make_train_txt("utils/test.csv", "model/test.txt")
-    m = MedicalAnalysis()
+txt_dir = "model/train.txt"
+tokenizer_dir = "model/tokenizer_model/"
+model_dir = "model/transformer_model/"
+train.model_sequence(txt_dir, tokenizer_dir, model_dir, False, True)
 
-    PD, PB, count = m.start()
-
-    param = dp.param.to_numpy()[-7:]
-
-    denorm = dp.denormalize(PD)
-
-    for i in range(len(PD)):
-        print(f"{i} test result \nprediction : {PB[i]}")
-
-        for j in range(7):
-            print(f"{param[j]} : {denorm[i][j][0]} ~ {denorm[i][j][1]}")
-
-        print()
+# if __name__ == "__main__":
+#     dp = DP("utils/train.csv")
+#     util.make_train_txt("utils/test.csv", "model/test.txt")
+#     m = MedicalAnalysis()
+#
+#     PD, PB, count = m.start()
+#
+#     param = dp.param.to_numpy()[-7:]
+#
+#     denorm = dp.denormalize(PD)
+#
+#     for i in range(len(PD)):
+#         print(f"{i} test result \nprediction : {PB[i]}")
+#
+#         for j in range(7):
+#             print(f"{param[j]} : {denorm[i][j][0]} ~ {denorm[i][j][1]}")
+#
+#         print()
