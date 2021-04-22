@@ -70,7 +70,7 @@ def train_mod(txt_dir, tokenizer, model_dir):
 
     trainer.save_model(model_dir)
 
-
+# 학습 모듈
 def model_sequence(txt_dir, tokenizer_dir, model_dir, is_tok_train=False, is_mod_train=False):
     '''
     :param txt_dir: train, text txt 파일이 저장되어 있는 장소
@@ -80,7 +80,7 @@ def model_sequence(txt_dir, tokenizer_dir, model_dir, is_tok_train=False, is_mod
     :param is_mod_train: model 학습 할거?
     '''
     if is_tok_train:
-        tokenizer = train_tok(txt_dir, tokenizer_dir)
+        train_tok(txt_dir, tokenizer_dir)
 
     if is_mod_train:
         tokenizer = get_tok(tokenizer_dir)

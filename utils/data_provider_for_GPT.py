@@ -32,6 +32,10 @@ class DataProvider:
             if item_min != item_max:
                 item = round((item - item_min) / item_max * 9)
 
+            for i in range(len(item)):
+                if item[i] > 9:
+                    item[i] = 9
+
             item = item + 10 * count
             count += 1
 
@@ -39,19 +43,23 @@ class DataProvider:
 
     def denormalize(self, prediction):
         ret = []
-        pred = list(s.split() for s in prediction)
-        pred = list(l[-7:] for l in pred)
+        # pred = list(s.split() for s in prediction)
+        # pred = list(l[-7:] for l in pred)
 
-        for p in pred:
+        for p in prediction:
             tmp = []
             for i in p:
-              this_min, this_max = self.minmax[int(i[:-1])]
-              this_rank = int(i[-1])
+                try:
+                    this_min = 0
+                    this_max = self.minmax[int(i[:-1])]
+                    this_rank = int(i[-1])
 
-              low_bound = this_rank / 9 * this_max + this_min
-              high_bound = (this_rank + 1) / 9 * this_max + this_min
+                    low_bound = this_rank / 9 * this_max + this_min
+                    high_bound = (this_rank + 1) / 9 * this_max + this_min
 
-              tmp.append([round(low_bound), round(high_bound)])
+                    tmp.append([round(low_bound), round(high_bound)])
+                except:
+                    tmp.append([0, 0])
 
             ret.append(tmp)
         return ret

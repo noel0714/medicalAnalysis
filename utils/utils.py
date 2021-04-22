@@ -1,5 +1,6 @@
 from utils.data_provider_for_GPT import DataProvider as DP
 
+
 def change_to_string(num_list):
     ret = ""
 
@@ -7,6 +8,7 @@ def change_to_string(num_list):
         ret += (str(n) + " ")
 
     return ret
+
 
 def csv_to_token(path):
     dp = DP(path)
@@ -18,6 +20,7 @@ def csv_to_token(path):
         tokens.append(t)
 
     return tokens
+
 
 def make_train_txt(path, name):
     tokens = csv_to_token(path)
