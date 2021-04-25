@@ -15,7 +15,7 @@ class DataProvider:
         self.data = self.csv.to_numpy().astype(np.int32).astype(str)
 
     def get_minmax(self):
-        path = "utils/max_value.txt"
+        path = "../utils/max_value.txt"
 
         with open(path) as t:
             l = t.readline()

@@ -86,8 +86,10 @@ def model_sequence(txt_dir, tokenizer_dir, model_dir, is_tok_train=False, is_mod
         tokenizer = get_tok(tokenizer_dir)
         train_mod(txt_dir, tokenizer, model_dir)
 
-txt_dir = "train.txt"
-tokenizer_dir = "tokenizer_model/"
-model_dir = "transformer_model/"
 
-model_sequence(txt_dir, tokenizer_dir, model_dir, False, True)
+if __name__ == "__main__":
+    txt_dir = "train.txt"
+    tokenizer_dir = "tokenizer_model/"
+    model_dir = "transformer_model/"
+
+    model_sequence(txt_dir, tokenizer_dir, model_dir, False, True)

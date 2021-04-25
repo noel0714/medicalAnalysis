@@ -64,7 +64,7 @@ def get_answer(fill_mask, s):
 
 
 def start(fill_mask):
-    with open("model/test.txt") as cs:
+    with open("test.txt") as cs:
         L = cs.readlines()
         PD = []
         PB = []
@@ -100,7 +100,7 @@ def test_sequence():
     param.append("probability")
 
     mod_dir = "transformer_model/checkpoint-33000/"
-    model = RobertaForMaskedLM.from_pretrained(mod_dir + str(i))
+    model = RobertaForMaskedLM.from_pretrained(mod_dir)
     fill_mask = pipeline("fill-mask",
                          model=model,
                          tokenizer=tokenizer)
@@ -122,4 +122,5 @@ def test_sequence():
     df = pd.DataFrame(l, columns=param)
     df.to_csv(result_dir + "result.csv", index=False, encoding="cp949")
 
-test_sequence()
+if __name__ == "__main__":
+    test_sequence()
