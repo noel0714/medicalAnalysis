@@ -85,21 +85,21 @@ def start(fill_mask):
 
 # test 모듈
 def test_sequence():
-    result_dir = "results/"
+    result_dir = "../results/"
 
-    tok_dir = "model/tokenizer_model/"
+    tok_dir = "tokenizer_model/"
     tokenizer = train.get_tok(tok_dir)
 
-    csv_path = "utils/test.csv"
-    txt_name = "model/test.txt"
+    csv_path = "../utils/test.csv"
+    txt_name = "test.txt"
     utils.make_train_txt(csv_path, txt_name)
 
-    dp = DP("utils/test.csv")
+    dp = DP("../utils/test.csv")
     param = dp.param.to_numpy()[-7:]
     param = param.tolist()
     param.append("probability")
 
-    mod_dir = "model/transformer_model/checkpoint-33000/"
+    mod_dir = "transformer_model/checkpoint-33000/"
     model = RobertaForMaskedLM.from_pretrained(mod_dir + str(i))
     fill_mask = pipeline("fill-mask",
                          model=model,
@@ -121,3 +121,5 @@ def test_sequence():
 
     df = pd.DataFrame(l, columns=param)
     df.to_csv(result_dir + "result.csv", index=False, encoding="cp949")
+
+test_sequence()
