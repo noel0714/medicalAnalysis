@@ -103,7 +103,8 @@ def test_sequence():
     model = RobertaForMaskedLM.from_pretrained(mod_dir)
     fill_mask = pipeline("fill-mask",
                          model=model,
-                         tokenizer=tokenizer)
+                         tokenizer=tokenizer,
+                         device=0)
 
     PD, PB, ill, count = start(fill_mask)
 
